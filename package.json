@@ -10,12 +10,17 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxt/ui": "^2.13.0",
+    "@pinia/nuxt": "^0.5.1",
     "nuxt": "^3.10.2",
+    "pinia": "^2.1.7",
     "vue": "^3.4.19",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
+    "@iconify-json/mdi": "^1.1.64",
     "@nuxtjs/supabase": "^1.1.6",
+    "@pinia-plugin-persistedstate/nuxt": "^1.2.0",
     "@supabase/supabase-js": "^2.39.7"
   }
 }

@@ -1,7 +1,24 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  modules: ["@nuxtjs/supabase"],
+  modules: ["@nuxt/ui", "@nuxtjs/supabase", "@pinia/nuxt", '@pinia-plugin-persistedstate/nuxt'],
+  ui: {
+    icons: ["heroicons", "mdi"],
+  },
+  supabase: {
+    redirectOptions: {
+      login: "/login",
+      callback: "/confirm",
+      exclude: ["*"],
+    },
+  },
+  piniaPersistedstate: {
+    cookieOptions: {
+      sameSite: 'strict',
+    },
+    storage: 'localStorage',
+  },
   app: {
     head: {
       title: "Kuimon",
