@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "kuimon",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,12 +10,14 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@formkit/auto-animate": "^0.8.1",
     "@nuxt/ui": "^2.13.0",
     "@pinia/nuxt": "^0.5.1",
     "nuxt": "^3.10.2",
     "pinia": "^2.1.7",
     "vue": "^3.4.19",
-    "vue-router": "^4.2.5"
+    "vue-router": "^4.2.5",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@iconify-json/mdi": "^1.1.64",

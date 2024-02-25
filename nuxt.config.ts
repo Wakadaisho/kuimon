@@ -2,7 +2,13 @@
 
 export default defineNuxtConfig({
   devtools: { enabled: true },
-  modules: ["@nuxt/ui", "@nuxtjs/supabase", "@pinia/nuxt", '@pinia-plugin-persistedstate/nuxt'],
+  modules: [
+    "@nuxt/ui",
+    "@nuxtjs/supabase",
+    "@pinia/nuxt",
+    "@pinia-plugin-persistedstate/nuxt",
+    "@formkit/auto-animate/nuxt",
+  ],
   ui: {
     icons: ["heroicons", "mdi"],
   },
@@ -15,9 +21,9 @@ export default defineNuxtConfig({
   },
   piniaPersistedstate: {
     cookieOptions: {
-      sameSite: 'strict',
+      sameSite: "strict",
     },
-    storage: 'localStorage',
+    storage: "localStorage",
   },
   app: {
     head: {
