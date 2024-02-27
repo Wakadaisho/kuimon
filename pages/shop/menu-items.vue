@@ -20,7 +20,7 @@
             <template #selected-header>
 
                 <UCheckbox :checked="!!selectedRows.length"
-                    :indeterminate="!!(selectedRows.length && selectedRows.length < selectableRows?.length)"
+                    :indeterminate="!!(selectedRows.length && selectedRows.length < filteredRows?.length)"
                     @click="toggleSelectedPageRows" />
 
             </template>
@@ -33,18 +33,34 @@
                 <div v-else>
                     <UCheckbox :checked="!!selectedRows.find(_row => _row.id === row.id)" @click="select(row)" />
                 </div>
-
             </template>
-            <template #vegan-data="{ row }">
-                <UBadge class="rounded-full" :variant="'subtle'">{{ row.vegan ? 'Yes' : 'No' }}</UBadge>
 
+            <template #ingredientsList-data="{ row }" :class="`w-64 overflow-auto whitespace-nowrap`">
+                <div class="cursor-help w-36 whitespace-nowrap overflow-hidden overflow-ellipsis" @click="toast.add({
+                    title: row.ingredient.map(item => item.name).join(', '),
+                    color: 'gray'
+                })">
+                    {{ row.ingredient.map(item => item.name).join(', ') }}
+                </div>
             </template>
-            <template #halal-data="{ row }">
-                <UBadge class="rounded-full" :variant="'subtle'">{{ row.halal ? 'Yes' : 'No' }}</UBadge>
 
+            <template #badges-data="{ row }">
+                <div class="flex gap-1">
+                    <UBadge v-if="row.vegan" class="rounded-full" color="green" variant="solid">
+                        <span class="uppercase font-extralight text-xs"> Vegan</span>
+                    </UBadge>
+                    <UBadge v-if="row.halal" class="rounded-full" color="lime" variant="solid"><span
+                            class="uppercase font-extralight text-xs"> Halal</span>
+                    </UBadge>
+                    <UBadge v-if="row.spiciness !== 'none'" class="flex items-center rounded-full"
+                        :color="colors[steps.indexOf(row.spiciness)]" variant="solid">
+                        <UIcon :name="`i-mdi-chili-${row.spiciness}`" />
+                        <span class="uppercase font-extralight text-xs">{{ row.spiciness }}</span>
+                    </UBadge>
+                </div>
             </template>
+
             <template #actions-data="{ row }">
-                <!-- Cannot edit system items -->
                 <div v-if="!!row.user_id" class="flex gap-4">
                     <UButton icon="i-heroicons-pencil" size="2xs" color="orange" variant="ghost" square
                         @click="activeItemRef = row; showUpdateModal = true" />
@@ -73,7 +89,7 @@
                     </span>
                 </div>
 
-                <UPagination  v-model="page" :page-count="pageCount" :total="pageTotal" :ui="{
+                <UPagination v-model="page" :page-count="pageCount" :total="pageTotal" :ui="{
                     wrapper: 'flex items-center gap-1',
                     rounded: '!rounded-full min-w-[32px] justify-center',
                     default: {
@@ -99,12 +115,79 @@
                     <UFormGroup label="Description" name="description" hint="Optional">
                         <UTextarea v-model="state.description" />
                     </UFormGroup>
-                    <UFormGroup label="Vegan" name="vegan">
-                        <UToggle v-model="state.vegan" />
-                    </UFormGroup>
+                    <UCard>
+                        <template #footer>
+                            <UCommandPalette class="min-h-min" :empty-state="{ icon: null, label: null }"
+                                :ui="{ emptyState: { wrapper: '' } }" command-attribute="name" :debounce="500"
+                                :placeholder="`Add ingredients...`" v-model="selectedIngredients" multiple
+                                :autoselect="false" :groups="ingredients"
+                                :fuse="{ resultLimit: 5, fuseOptions: { threshold: 0.1, includeMatches: true, keys: ['name', 'description'] } }">
+                            </UCommandPalette>
+                        </template>
+
+                        <template #header>
+                            <div class="flex gap-2">
+                                <UTooltip v-for="selectedIngredient in selectedIngredients" text="Click to delete">
+                                    <UBadge class="rounded-full cursor-pointer"
+                                        @click.self="removeSelectedIngredient(selectedIngredient)" variant='outline'>
+                                        {{ selectedIngredient.name }}
+                                    </UBadge>
+                                </UTooltip>
+                            </div>
+                        </template>
+                    </UCard>
+
+                    <div class="flex flex-col sm:flex-row justify-around h-32">
+                        <UFormGroup class="sm:w-1/2  relative" label="Spiciness" name="spiciness">
+                            <div class="absolute w-full top-1">
+                                <UProgress :value="spiciness" :max="steps">
+                                    <template #step-0="{ step }">
+                                        <span class="flex justify-end text-lg items-center text-lime-500">
+                                            <UIcon name="i-mdi-chili-off" /> {{ step }}
+                                        </span>
+                                    </template>
+
+                                    <template #step-1="{ step }">
+
+                                        <span class="flex justify-end text-lg items-center text-amber-500">
+                                            <UIcon name="i-mdi-chili-mild" /> {{ step }}
+                                        </span>
+
+                                    </template>
+
+                                    <template #step-2="{ step }">
+                                        <span class="flex justify-end text-lg items-center text-orange-500">
+                                            <UIcon name="i-mdi-chili-medium" /> {{ step }}
+                                        </span>
+                                    </template>
+
+                                    <template #step-3="{ step }">
+                                        <span class="flex justify-end text-lg items-center text-red-500">
+                                            <UIcon name="i-mdi-chili-hot" /> {{ step }}
+                                        </span>
+                                    </template>
+                                </UProgress>
+                            </div>
+                            <div class="absolute w-full">
+                                <URange v-model="spiciness" :min="0" :max="3" name="spiciness" :color="color" />
+                            </div>
+                        </UFormGroup>
+                        <div class="w-full flex justify-around">
+                            <UFormGroup label="Vegan" name="vegan">
+                                <UToggle on-icon="i-heroicons-check-20-solid" off-icon="i-heroicons-x-mark-20-solid"
+                                    v-model="state.vegan" />
+                            </UFormGroup>
+                            <UFormGroup label="Halal" name="halal">
+                                <UToggle on-icon="i-heroicons-check-20-solid" off-icon="i-heroicons-x-mark-20-solid"
+                                    v-model="state.halal" />
+                            </UFormGroup>
+                        </div>
+                    </div>
                 </div>
                 <template #footer>
-                    <UButton :loading="submitting" type="submit">Add</UButton>
+                    <div class="flex justify-end w-full">
+                        <UButton :loading="submitting" type="submit">Add</UButton>
+                    </div>
                 </template>
             </UCard>
         </UForm>
@@ -114,7 +197,7 @@
         <UForm ref="form" :schema="schema" :state="state" @submit="updateItem">
             <UCard>
                 <template #header>
-                    <p class="text-sm uppercase font-semibold text-center">Update Item {{ activeItemRef.name }}
+                    <p class="text-sm uppercase font-semibold text-center">Update Item {{ activeItemRef?.name }}
                     </p>
                 </template>
                 <div class="flex flex-col space-y-5">
@@ -124,16 +207,78 @@
                     <UFormGroup label="Description" name="description" hint="Optional">
                         <UTextarea v-model="state.description" />
                     </UFormGroup>
-                    <UFormGroup label="Vegan" name="vegan">
-                        <UToggle v-model="state.vegan" />
-                    </UFormGroup>
-                    <UFormGroup label="Halal" name="halal">
-                        <UToggle v-model="state.halal" />
-                    </UFormGroup>
+                    <UCard>
+                        <template #footer>
+                            <UCommandPalette class="min-h-min" :empty-state="{ icon: null, label: null }"
+                                :ui="{ emptyState: { wrapper: '' } }" command-attribute="name" :debounce="500"
+                                :placeholder="`Add ingredients...`" v-model="selectedIngredients" multiple
+                                :autoselect="false" :groups="ingredients"
+                                :fuse="{ resultLimit: 5, fuseOptions: { threshold: 0.1, includeMatches: true, keys: ['name', 'description'] } }">
+                            </UCommandPalette>
+                        </template>
+
+                        <template #header>
+                            <div class="flex gap-2">
+                                <UTooltip v-for="selectedIngredient in selectedIngredients" text="Click to delete">
+                                    <UBadge class="rounded-full cursor-pointer"
+                                        @click.self="removeSelectedIngredient(selectedIngredient)" variant='outline'>
+                                        {{ selectedIngredient.name }}
+                                    </UBadge>
+                                </UTooltip>
+                            </div>
+                        </template>
+                    </UCard>
+                    <div class="flex flex-col sm:flex-row justify-around h-32">
+                        <UFormGroup class="sm:w-1/2  relative" label="Spiciness" name="spiciness">
+                            <div class="absolute w-full top-1">
+                                <UProgress :value="spiciness" :max="steps">
+                                    <template #step-0="{ step }">
+                                        <span class="flex justify-end text-lg items-center text-lime-500">
+                                            <UIcon name="i-mdi-chili-off" /> {{ step }}
+                                        </span>
+                                    </template>
+
+                                    <template #step-1="{ step }">
+                                        <span class="flex justify-end text-lg items-center text-amber-500">
+                                            <UIcon name="i-mdi-chili-mild" /> {{ step }}
+                                        </span>
+
+                                    </template>
+
+                                    <template #step-2="{ step }">
+                                        <span class="flex justify-end text-lg items-center text-orange-500">
+                                            <UIcon name="i-mdi-chili-medium" /> {{ step }}
+                                        </span>
+                                    </template>
+
+                                    <template #step-3="{ step }">
+                                        <span class="flex justify-end text-lg items-center text-red-500">
+                                            <UIcon name="i-mdi-chili-hot" /> {{ step }}
+                                        </span>
+                                    </template>
+                                </UProgress>
+                            </div>
+                            <div class="absolute w-full">
+                                <URange v-model="spiciness" :min="0" :max="3" name="spiciness" :color="color" />
+                            </div>
+                        </UFormGroup>
+                        <div class="w-full flex justify-around">
+                            <UFormGroup label="Vegan" name="vegan">
+                                <UToggle on-icon="i-heroicons-check-20-solid" off-icon="i-heroicons-x-mark-20-solid"
+                                    v-model="state.vegan" />
+                            </UFormGroup>
+                            <UFormGroup label="Halal" name="halal">
+                                <UToggle on-icon="i-heroicons-check-20-solid" off-icon="i-heroicons-x-mark-20-solid"
+                                    v-model="state.halal" />
+                            </UFormGroup>
+                        </div>
+                    </div>
 
                 </div>
                 <template #footer>
-                    <UButton :loading="submitting" type="submit">Update</UButton>
+                    <div class="flex justify-end w-full">
+                        <UButton :loading="submitting" type="submit">Update</UButton>
+                    </div>
                 </template>
             </UCard>
         </UForm>
@@ -191,17 +336,66 @@
 import { z } from 'zod'
 
 const supabase = useSupabaseClient();
+const user = useSupabaseUser()
 const form = ref()
 const submitting = ref(false);
-
 const showAddModal = ref(false);
 const showUpdateModal = ref(false);
 const showDeleteModal = ref(false);
 const showDeleteAllModal = ref(false);
 const activeItemRef = ref(null);
 const showItems = ref(false)
-
 const q = ref('')
+const filter = ref('')
+const selectedIngredients = ref([])
+const spiciness = ref(0)
+const toast = useToast()
+
+const steps = [
+    'none',
+    'mild',
+    'medium',
+    'hot'
+]
+const colors = [
+    'lime',
+    'amber',
+    'orange',
+    'red'
+]
+
+const color = computed(() => {
+    return colors[spiciness.value]
+})
+
+watch(filter, () => {
+    if (filter.value) {
+        q.value = filter.value
+    }
+})
+
+watch(activeItemRef, (item) => {
+    if (item) {
+        state = reactive({ ...item })
+        selectedIngredients.value = item.ingredient
+        spiciness.value = steps.indexOf(item.spiciness)
+    }
+})
+
+const ingredients = [
+    {
+        key: 'ingredients',
+        label: q => q && `Ingredients matching “${q}”...`,
+        search: async (q) => {
+            if (!q) {
+                return []
+            }
+
+            const { data } = await useFetch('/api/search/ingredients', { params: { q } })
+            return data.value.data
+        }
+    }]
+
 const filteredRows = computed(() => {
     if (!q.value) {
         return items.value
@@ -219,6 +413,10 @@ const filteredRows = computed(() => {
         })
     })
 })
+
+function removeSelectedIngredient(ingredient) {
+    selectedIngredients.value = selectedIngredients.value.filter((v) => v.id != ingredient.id)
+}
 
 const searchTimeout = ref(null)
 const items = ref([])
@@ -242,10 +440,8 @@ async function deleteSelectedRows() {
     }
     selectedRows.value = []
     showDeleteAllModal.value = false
-    await refreshItems()
+    refreshItems()
 }
-
-const selectableRows = computed(() => filteredRows.value?.filter((row) => !!row.user_id))
 
 // Actions
 const actions = [
@@ -278,8 +474,21 @@ function toggleSelectedPageRows() {
 const { data, pending, refresh: refreshItems } =
     await useLazyAsyncData('item', async () => {
         return await supabase.from('menu_item')
-            .select('id, name, description, vegan, halal, user_id', { count: 'exact' })
+            .select(`id,
+                    name,
+                    description,
+                    vegan,
+                    halal,
+                    user_id,
+                    spiciness,
+                    ingredient (
+                        id,
+                        name,
+                        description,
+                        allergen
+                    )`, { count: 'exact' })
             .order('name')
+            .eq('user_id', user.value.id)
             .range(pageFrom.value - 1, pageTo.value - 1)
     }, { default: () => [], watch: [page, pageCount] });
 
@@ -287,16 +496,17 @@ const { data: dataSearch, pending: pendingSearch, execute: performSearch } =
     await useLazyAsyncData('item_search', async () => {
         return await supabase.from('menu_item')
             .select('id, name, description, vegan, halal, user_id', { count: 'exact' })
+            .eq('user_id', user.value.id)
             .filter('name', 'ilike', `%${q.value}%`)
     });
 
 watch(data, (_data) => {
     items.value = _data.data ?? []
     pageTotal.value = _data.count ?? 100
-}, { immediate: true, deep: true})
+}, { immediate: true, deep: true })
 
 watch(dataSearch, (_data) => {
-    if(!q.value) return;
+    if (!q.value) return;
     items.value = _data.data ?? []
 })
 
@@ -315,20 +525,22 @@ const columns = [
     { key: 'selected', label: '' },
     { key: 'name', label: 'Name', sortable: true },
     { key: 'description', label: 'Description' },
-    { key: 'vegan', label: 'Vegan' },
-    { key: 'halal', label: 'Halal' },
+    { key: 'ingredientsList', label: 'Ingredients' },
+    { key: 'badges', label: 'Dietary' },
     { key: 'actions', label: 'Actions' }
 ]
 
 const schema = z.object({
     name: z.string().min(1, "Name is required"),
     description: z.string().optional(),
-    vegan: z.boolean()
+    vegan: z.boolean(),
+    halal: z.boolean()
 })
 
 const stateTemplate = {
     name: '',
     description: '',
+    spiciness: 'none',
     vegan: false,
     halal: false
 }
@@ -336,42 +548,76 @@ const stateTemplate = {
 let state = reactive({ ...stateTemplate })
 
 async function addItem(event) {
+    let submitData = { ...event.data, spiciness: steps[spiciness.value].toLowerCase() }
+    let submitIngredients = selectedIngredients.value.map(ingredient => ingredient.id)
+
     submitting.value = true;
 
-    const { error, } = await useAsyncData('item_POST', async () => {
-        return await supabase.from('menu_item').insert([{ ...event.data, }])
-    }, { transform: result => { if (result.error) throw result.error; } });
+    const { data, error, } = await useAsyncData('item_POST', async () => {
+        return await supabase.from('menu_item').insert([{ ...submitData, }]).select('id')
+    },);
+
+    submitIngredients = submitIngredients.map(ingredient => {
+        return { menu_item_id: data.value.data[0].id, ingredient_id: ingredient }
+    })
+
+    const { error: errorItems } = await useAsyncData('menu_item_ingredients_POST', async () => {
+        return await supabase.from('menu_item_ingredients').insert(submitIngredients)
+    },);
 
     submitting.value = false;
 
     activeItemRef.value = null
-    if (error?.value?.message.includes("duplicate")) {
+
+    if (errorItems?.value?.message.includes("duplicate")) {
         form.value.setErrors([{ message: "Item already exists", "path": "name" }])
         return;
     }
-    state = { ...stateTemplate }
+    state = reactive({ ...stateTemplate })
+    selectedIngredients.value = []
+    spiciness.value = 0
 
     showAddModal.value = false
-    await refreshItems()
+    refreshItems()
 }
 
 async function updateItem(event) {
-    submitting.value = true;
-    const { error } = await useAsyncData('item_PUT', async () => {
+    let submitData = { ...event.data, spiciness: steps[spiciness.value].toLowerCase() }
+    let submitIngredients = selectedIngredients.value.map(ingredient => ingredient.id)
 
-        return await supabase.from('menu_item').update(event.data).eq('id', activeItemRef.value.id)
-    }, { transform: result => { if (result.error) throw result.error; } });
+    submitting.value = true;
+
+    delete submitData['id']
+    delete submitData['user_id']
+    delete submitData['ingredient']
+
+    const { error } = await useAsyncData('item_PATCH', async () => {
+        return await supabase.from('menu_item').update(submitData).eq('id', activeItemRef.value.id)
+    },);
+
+    submitIngredients = submitIngredients.map(ingredient => {
+        return { menu_item_id: activeItemRef.value.id, ingredient_id: ingredient }
+    })
+
+    const { error: errorDeleteItems } = await useAsyncData('menu_item_ingredients_DELETE', async () => {
+        return await supabase.from('menu_item_ingredients').delete().eq('menu_item_id', activeItemRef.value.id)
+    });
+
+    const { error: errorUpdateItems } = await useAsyncData('menu_item_ingredients_POST', async () => {
+        return await supabase.from('menu_item_ingredients').upsert(submitIngredients, { onConflict: ['menu_item_id', 'ingredient_id'] })
+    });
 
     submitting.value = false;
-    activeItemRef.value = null
-
-    if (error?.value?.message.includes("duplicate")) {
-        form.value.setErrors([{ message: "Item already exists", "path": "name" }])
-        return;
-    }
 
     showUpdateModal.value = false
-    await refreshItems()
+
+    state = reactive({ ...stateTemplate })
+
+    selectedIngredients.value = []
+    spiciness.value = 0
+    activeItemRef.value = null
+
+    refreshItems()
 }
 
 async function deleteItem() {
@@ -387,9 +633,14 @@ async function deleteItem() {
         alert("An error occurred while deleting the item")
     }
 
+    activeItemRef.value = null
     showDeleteModal.value = false
-    await refreshItems()
+    refreshItems()
 }
+
+onUnmounted(() => {
+    clearTimeout(searchTimeout.value)
+})
 
 definePageMeta({
     layout: 'shop-menus',

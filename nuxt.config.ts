@@ -7,23 +7,31 @@ export default defineNuxtConfig({
     "@nuxtjs/supabase",
     "@pinia/nuxt",
     "@pinia-plugin-persistedstate/nuxt",
-    "@formkit/auto-animate/nuxt",
+    "@nuxtjs/google-fonts",
   ],
   ui: {
-    icons: ["heroicons", "mdi"],
+    icons: ["heroicons", "mdi", "simple-icons"],
   },
   supabase: {
     redirectOptions: {
       login: "/login",
-      callback: "/confirm",
-      exclude: ["*"],
+      callback: "/",
+      exclude: ["/login", "/sign-up", "/"],
     },
   },
   piniaPersistedstate: {
     cookieOptions: {
       sameSite: "strict",
     },
-    storage: "localStorage",
+    storage: "sessionStorage",
+  },
+  googleFonts: {
+    families: {
+      "Rampant+One": true,
+      Inter:true,
+      
+    },
+    download: false,
   },
   app: {
     head: {

@@ -69,7 +69,7 @@
                     </span>
                 </div>
 
-                <UPagination  v-model="page" :page-count="pageCount" :total="pageTotal" :ui="{
+                <UPagination v-model="page" :page-count="pageCount" :total="pageTotal" :ui="{
                     wrapper: 'flex items-center gap-1',
                     rounded: '!rounded-full min-w-[32px] justify-center',
                     default: {
@@ -183,6 +183,7 @@
 import { z } from 'zod'
 
 const supabase = useSupabaseClient();
+const user = useSupabaseUser();
 const form = ref()
 const submitting = ref(false);
 
@@ -192,6 +193,12 @@ const showDeleteModal = ref(false);
 const showDeleteAllModal = ref(false);
 const activeIngredientRef = ref(null);
 const showIngredients = ref(false)
+
+watch(activeIngredientRef, (value) => {
+    if (value) {
+        state = reactive({ ...value })
+    }
+})
 
 const q = ref('')
 const filteredRows = computed(() => {
@@ -233,7 +240,7 @@ async function deleteSelectedRows() {
     }
     selectedRows.value = []
     showDeleteAllModal.value = false
-    await refreshIngredients()
+    refreshIngredients()
 }
 
 const selectableRows = computed(() => filteredRows.value?.filter((row) => !!row.user_id))
@@ -271,6 +278,7 @@ const { data, pending, refresh: refreshIngredients } =
         return await supabase.from('ingredient')
             .select('id, name, description, allergen, user_id', { count: 'exact' })
             .order('name')
+            .or(`user_id.eq.${user.value.id},user_id.is.null`)
             .range(pageFrom.value - 1, pageTo.value - 1)
     }, { default: () => [], watch: [page, pageCount] });
 
@@ -278,16 +286,17 @@ const { data: dataSearch, pending: pendingSearch, execute: performSearch } =
     await useLazyAsyncData('ingredient_search', async () => {
         return await supabase.from('ingredient')
             .select('id, name, description, allergen, user_id', { count: 'exact' })
+            .or(`user_id.eq.${user.value.id},user_id.is.null`)
             .filter('name', 'ilike', `%${q.value}%`)
     });
 
 watch(data, (_data) => {
     ingredients.value = _data.data ?? []
     pageTotal.value = _data.count ?? 100
-}, { immediate: true, deep: true})
+}, { immediate: true, deep: true })
 
 watch(dataSearch, (_data) => {
-    if(!q.value) return;
+    if (!q.value) return;
     ingredients.value = _data.data ?? []
 })
 
@@ -338,10 +347,10 @@ async function addIngredient(event) {
         form.value.setErrors([{ message: "Ingredient already exists", "path": "name" }])
         return;
     }
-    state = { ...stateTemplate }
+    state = reactive({ ...stateTemplate })
 
     showAddModal.value = false
-    await refreshIngredients()
+    refreshIngredients()
 }
 
 async function updateIngredient(event) {
@@ -360,7 +369,7 @@ async function updateIngredient(event) {
     }
 
     showUpdateModal.value = false
-    await refreshIngredients()
+    refreshIngredients()
 }
 
 async function deleteIngredient() {
@@ -371,13 +380,15 @@ async function deleteIngredient() {
         return await supabase.from('ingredient').delete().eq('id', id)
     }, { transform: result => { if (result.error) throw result.error; } });
 
+
+    activeIngredientRef.value = null
     submitting.value = false;
     if (error?.value?.message) {
         alert("An error occurred while deleting the ingredient")
     }
 
     showDeleteModal.value = false
-    await refreshIngredients()
+    refreshIngredients()
 }
 
 definePageMeta({

@@ -1,7 +1,9 @@
 <template>
-    <NavBar />
-    <NuxtLoadingIndicator/>
-    <div class="container mx-auto">
-        <slot />
+    <div>
+        <NavBar />
+        <div class="container mx-auto">
+            <slot />
+
+        </div>
     </div>
 </template>

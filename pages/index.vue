@@ -1,114 +1,104 @@
 <template>
-    <div class="flex flex-col justify-between space-y-10 w-1/3 m-10 ml-4">
-        <UForm :state="state" @submit="onSubmit">
-            <div class="flex space-x-4" v-auto-animate>
-                <UButton @click="sortBy = 'name'" :variant="sortBy === 'name' ? 'solid' : 'outline'">
-                    Sort by name</UButton>
-                <UButton @click="sortBy = 'qty'" :variant="sortBy === 'qty' ? 'solid' : 'outline'">
-                    Sort by qty</UButton>
+    <div class="container mx-auto px-5 sm:w-10/12">
+        <UCard>
+            <template #header>
+                <div class="w-full">
+                    <h1 id="card-header" class="font- uppercase tracking-wide font-bold text-lg text-center">Let's find some
+                        grub</h1>
+                </div>
+            </template>
+            <UCommandPalette class="min-h-min" :empty-state="{ icon: null, label: null }"
+                :ui="{ emptyState: { wrapper: '' } }" :debounce="500" :placeholder="`Search`" :autoselect="false"
+                :groups="search" :fuse="{ resultLimit: 5, fuseOptions: { threshold: 0.1, } }">
+                <template #search-command="{ command }">
+
+                    <ULink class="truncate" to="#">{{ JSON.stringify(command) }}</ULink>
+
+                </template>
+            </UCommandPalette>
+            <template #footer>
+                <div class="flex sm:justify-end gap-5">
+                    <UPopover :popper="{ placement: 'bottom-start' }">
+                        <UButton :variant="`${personalFilterSelected ? 'solid' : 'outline'}`" label="Filters"
+                            class="rounded-lg" icon="i-mdi-tune" />
+                        <template #panel>
+                            <div class="flex flex-col gap-3 p-4">
+                                <UCheckbox v-model="personalFilter.vegan" label="Vegan" />
+                                <UCheckbox v-model="personalFilter.halal" label="Halal" />
+                                <USelect v-model="personalFilter.spiciness" color="primary" variant="outline"
+                                    leading-icon="i-mdi-chili-mild" :options="['Any', 'None', 'Mild', 'Medium', 'Hot']" />
+                            </div>
+                        </template>
+                    </UPopover>
+                </div>
+            </template>
+        </UCard>
+        <!-- <p>Test</p>
+        <UCard>
+            <template $header>
+                <div class="absolute inset-0">
+                    Image
+                </div>
+            </template>
+            <div class="h-full">
+                Body
             </div>
-            <div class="mt-10 flex justify-between">
-                <UInput placeholder="Name" v-model="state.name" ref="nameInput" />
-                <UInput placeholder="Quantity" v-model="state.qty" type="number" />
-                <UButton type="submit">
-                    Add order
-                </UButton>
-            </div>
-        </UForm>
-
-        <ul class="flex flex-col space-y-1" v-auto-animate>
-            <!-- <UButton icon="i-heroicons-trash" variant="ghost" @click="deleteOrder(order.id)" /> -->
-            <li v-for="order in getOrders" :key="order.id" class="hover:text-primary cursor-pointer block">{{ order.name }}
-                - x{{
-                    order.qty }}</li>
-        </ul>
-
-
-        <div>
-            <UTable :columns="columns" :rows="people" />
-        </div>
-
+            <template #footer>
+                <div class="h-full">
+                    Footer
+                </div>
+            </template>
+        </UCard> -->
     </div>
 </template>
 
 <script setup>
-import { useOrderStore } from '@/stores/currentOrder';
+const personalFilter = reactive({ vegan: false, halal: false, spiciness: 'Any' })
 
-const orderStore = useOrderStore();
-const nameInput = ref < HTMLInputElement | null > (null);
+const personalFilterSelected = computed(() => {
+    if (personalFilter.vegan || personalFilter.halal) {
+        return true
+    }
+    if (personalFilter.spiciness && personalFilter.spiciness !== 'Any') {
+        return true
+    }
+    return false
 
-const { sortBy, getOrders } = storeToRefs(orderStore);
-const { deleteOrder, addOrder } = orderStore;
+})
 
-const state = reactive({ id: '', name: '', qty: undefined })
+const search = [
+    {
+        key: 'search',
+        label: q => q && `Results for “${q}”...`,
+        search: async (q) => {
+            if (!q) {
+                return []
+            }
+            let opts = { params: { q } }
 
-const onSubmit = async (event) => {
-    const name = event.data.name ?? "";
-    if (!name.length) return;
+            if (personalFilter.vegan) {
+                opts.params.vegan = '1'
+            }
+            if (personalFilter.halal) {
+                opts.params.halal = '1'
+            }
+            if (personalFilter.spiciness && personalFilter.spiciness !== 'Any') {
+                opts.params.spiciness = personalFilter.spiciness.toLowerCase()
+            }
+            
+            const { data } = await useFetch('/api/search', opts)
+            
+            return data.value.data
+        }
+    }]
 
-    addOrder({ ...event.data });
-    state.name = '';
-    state.qty = undefined;
+// const { data: data_popular, pending, refresh: refreshIngredients } =
+//     await useLazyAsyncData('ingredient', async () => {
+//         return await supabase.from('ingredient')
+//             .select('id, name, description, allergen, user_id', { count: 'exact' })
+//             .order('name')
+//             .or(`user_id.eq.${user.value.id},user_id.is.null`)
+//             .range(pageFrom.value - 1, pageTo.value - 1)
+//     }, { default: () => [], watch: [page, pageCount] });
 
-};
-
-const columns = [{
-    key: 'id',
-    label: 'ID'
-}, {
-    key: 'name',
-    label: 'Name',
-    sortable: true
-}, {
-    key: 'title',
-    label: 'Title',
-    sortable: true
-}, {
-    key: 'email',
-    label: 'Email',
-    sortable: true,
-    direction: 'desc'
-}, {
-    key: 'role',
-    label: 'Role'
-}]
-
-const people = [{
-    id: 1,
-    name: 'Lindsay Walton',
-    title: 'Front-end Developer',
-    email: 'lindsay.walton@example.com',
-    role: 'Member'
-}, {
-    id: 2,
-    name: 'Courtney Henry',
-    title: 'Designer',
-    email: 'courtney.henry@example.com',
-    role: 'Admin'
-}, {
-    id: 3,
-    name: 'Tom Cook',
-    title: 'Director of Product',
-    email: 'tom.cook@example.com',
-    role: 'Member'
-}, {
-    id: 4,
-    name: 'Whitney Francis',
-    title: 'Copywriter',
-    email: 'whitney.francis@example.com',
-    role: 'Admin'
-}, {
-    id: 5,
-    name: 'Leonard Krasner',
-    title: 'Senior Designer',
-    email: 'leonard.krasner@example.com',
-    role: 'Owner'
-}, {
-    id: 6,
-    name: 'Floyd Miles',
-    title: 'Principal Designer',
-    email: 'floyd.miles@example.com',
-    role: 'Member'
-}]
 </script>
-

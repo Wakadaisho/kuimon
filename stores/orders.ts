@@ -7,8 +7,8 @@ interface Order {
   qty: number;
 }
 
-export const useOrderStore = defineStore(
-  "orders",
+export const useCustomerOrderStore = defineStore(
+  "customer_order",
   () => {
     const orders = ref<Order[]>([]);
     const sortBy = ref("name");

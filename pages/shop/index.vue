@@ -4,6 +4,7 @@
 
 <script setup>
 definePageMeta({
-    name: 'Shop'
+    layout: 'shop-menus',
+    name: 'Shop Settings',
 })
 </script>
