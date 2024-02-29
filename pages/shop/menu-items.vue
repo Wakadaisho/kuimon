@@ -105,6 +105,9 @@
                     <UFormGroup label="Description" name="description" hint="Optional">
                         <UTextarea v-model="state.description" />
                     </UFormGroup>
+                    <UFormGroup label="Price" name="price">
+                        <UInput v-model="state.price" type="number" />
+                    </UFormGroup>
                     <UCard>
                         <template #footer>
                             <UCommandPalette class="min-h-min" :empty-state="{ icon: null, label: null }" selected-icon=""
@@ -196,6 +199,9 @@
                     </UFormGroup>
                     <UFormGroup label="Description" name="description" hint="Optional">
                         <UTextarea v-model="state.description" />
+                    </UFormGroup>
+                    <UFormGroup label="Price" name="price">
+                        <UInput v-model="state.price" type="number" />
                     </UFormGroup>
                     <UCard>
                         <template #footer>
@@ -341,6 +347,18 @@ const selectedIngredients = ref([])
 const spiciness = ref(0)
 const toast = useToast()
 
+watch(showUpdateModal, (value) => {
+    if (!value) {
+        activeItemRef.value = reactive({ ...stateTemplate })
+    }
+})
+
+watch(showDeleteModal, (value) => {
+    if (!value) {
+        activeItemRef.value = reactive({ ...stateTemplate })
+    }
+})
+
 const steps = [
     'none',
     'mild',
@@ -482,6 +500,7 @@ const { data, pending, refresh: refreshItems } =
                     name,
                     description,
                     vegan,
+                    price,
                     halal,
                     user_id,
                     spiciness,
@@ -504,6 +523,8 @@ const { data: dataSearch, pending: pendingSearch, execute: performSearch } =
             .filter('name', 'ilike', `%${q.value}%`)
     });
 
+items.value = data.value?.data ?? []
+pageTotal.value = data.value?.count ?? 100
 watch(data, (_data) => {
     items.value = _data.data ?? []
     pageTotal.value = _data.count ?? 100
@@ -529,6 +550,7 @@ const columns = [
     { key: 'selected', label: '' },
     { key: 'name', label: 'Name', sortable: true },
     { key: 'description', label: 'Description' },
+    { key: 'price', label: 'Price', sortable: true },
     { key: 'ingredientsList', label: 'Ingredients' },
     { key: 'badges', label: 'Dietary' },
     { key: 'actions', label: 'Actions' }
@@ -537,6 +559,7 @@ const columns = [
 const schema = z.object({
     name: z.string().min(1, "Name is required"),
     description: z.string().optional(),
+    price: z.number().optional(),
     vegan: z.boolean(),
     halal: z.boolean()
 })
@@ -546,7 +569,8 @@ const stateTemplate = {
     description: '',
     spiciness: 'none',
     vegan: false,
-    halal: false
+    halal: false,
+    price: 0,
 }
 
 let state = reactive({ ...stateTemplate })

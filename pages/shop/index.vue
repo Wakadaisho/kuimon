@@ -41,7 +41,7 @@ const schema = z.object({
 const { data } = await useFetch("/api/profile/me");
 
 state = reactive({
-    display_name: data.value.display_name,
+    display_name: data.value.display_name ?? "",
     is_restaurant: data.value.is_restaurant,
     allow_orders: data.value.allow_orders,
     discoverable: data.value.discoverable

@@ -9,9 +9,11 @@
                         <p class="uppercase text-xs tracking-widest">kuimon</p>
                     </div>
                 </div>
+
                 <div class="flex items-center">
                     <div class="flex gap-10">
                         <ul class="hidden sm:flex items-center gap-4">
+                            <UIcon @click="searchModal = true" v-if="user" name="i-heroicons-magnifying-glass" />
                             <ULink v-if="user" v-for="link in links.filter((v) => v.show !== false)" :key="link.to"
                                 :to="link.to">
                                 <UChip v-if="link.label === 'My Orders' && getAllOrdersCount" :text="getAllOrdersCount"
@@ -48,19 +50,30 @@
             </div>
         </nav>
     </header>
+    <UModal v-model="searchModal" fullscreen>
+        <div class="flex justify-end m-2">
+            <UButton color="gray" variant="soft" class="w-8 h-8 p-0 rounded-full" @click="searchModal = false">
+                <UIcon class="w-full h-full" name="i-heroicons-x-mark" />
+            </UButton>
+        </div>
+        <div class="my-10">
+            <SearchBox />
+        </div>
+    </UModal>
 </template>
 
 <script setup>
 const { data } = await useFetch('/api/profile/me')
 const user = useSupabaseUser()
 const router = useRouter()
+const searchModal = ref(false)
 const customerOrderStore = useCustomerOrderStore()
 const { getAllOrdersCount } = storeToRefs(customerOrderStore)
 const name = computed(() => {
     if (data.value.display_name) {
         return data.value.display_name
     }
-    if (data.value.first_name.length && data.value.last_name.length) {
+    if (data.value.first_name?.length && data.value.last_name?.length) {
         return `${data.value.last_name[0].toUpperCase()}. ${data.value.first_name}`
     }
     return user.value?.email

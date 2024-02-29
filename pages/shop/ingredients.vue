@@ -183,12 +183,17 @@ const showDeleteAllModal = ref(false);
 const activeIngredientRef = ref(null);
 const showIngredients = ref(false)
 
-watch(activeIngredientRef, (value) => {
-    if (value) {
-        state = reactive({ ...value })
+watch(showUpdateModal, (value) => {
+    if (!value) {
+        activeIngredientRef.value = reactive({ ...stateTemplate })
     }
 })
 
+watch(showDeleteModal, (value) => {
+    if (!value) {
+        activeIngredientRef.value = reactive({ ...stateTemplate })
+    }
+})
 const q = ref('')
 const filteredRows = computed(() => {
     if (!q.value) {
@@ -292,6 +297,8 @@ const { data: dataSearch, pending: pendingSearch, execute: performSearch } =
             .filter('name', 'ilike', `%${q.value}%`)
     });
 
+ingredients.value = data.value?.data ?? []
+pageTotal.value = data.value?.count ?? 100
 watch(data, (_data) => {
     ingredients.value = _data.data ?? []
     pageTotal.value = _data.count ?? 100

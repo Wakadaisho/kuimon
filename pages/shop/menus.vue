@@ -245,6 +245,19 @@ watch(activeMenuRef, (item) => {
     }
 })
 
+
+watch(showUpdateModal, (value) => {
+    if (!value) {
+        activeMenuRef.value = reactive({ ...stateTemplate })
+    }
+})
+
+watch(showDeleteModal, (value) => {
+    if (!value) {
+        activeMenuRef.value = reactive({ ...stateTemplate })
+    }
+})
+
 const items = [
     {
         key: 'items',
@@ -370,6 +383,8 @@ const { data: dataSearch, pending: pendingSearch, execute: performSearch } =
             .filter('name', 'ilike', `%${q.value}%`)
     });
 
+menus.value = data.value?.data ?? []
+pageTotal.value = data.value?.count ?? 100
 watch(data, (_data) => {
     menus.value = _data.data ?? []
     pageTotal.value = _data.count ?? 100

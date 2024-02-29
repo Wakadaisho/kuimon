@@ -12,13 +12,13 @@ export default defineNuxtConfig({
   ui: {
     icons: ["heroicons", "mdi", "simple-icons"],
   },
-  // supabase: {
-  //   redirectOptions: {
-  //     login: "/login",
-  //     callback: "/",
-  //     exclude: ["/login", "/sign-up"],
-  //   },
-  // },
+  supabase: {
+    redirectOptions: {
+      login: "/login",
+      // callback: "/",
+      exclude: ["/login", "/sign-up"],
+    },
+  },
   piniaPersistedstate: {
     cookieOptions: {
       sameSite: "strict",
