@@ -16,7 +16,7 @@
                             <UIcon @click="searchModal = true" v-if="user" name="i-heroicons-magnifying-glass" />
                             <ULink v-if="user" v-for="link in links.filter((v) => v.show !== false)" :key="link.to"
                                 :to="link.to">
-                                <UChip v-if="link.label === 'My Orders' && getAllOrdersCount" :text="getAllOrdersCount"
+                                <UChip v-if="user && link.label === 'My Orders' && getAllOrdersCount" :text="getAllOrdersCount"
                                     size="xl">
                                     <span
                                         class="border-b-2 border-transparent hover:text-primary hover:border-primary font-semibold text-xs uppercase tracking-wider">
@@ -96,7 +96,6 @@ const popoverLinks = computed(() => {
             label: 'Shop settings',
             icon: 'i-simple-icons-homeassistantcommunitystore',
             to: '/shop',
-
         }
         ],
         [{
@@ -131,6 +130,10 @@ const links = computed(() => {
     return [{
         to: "/shop",
         label: "Shop Details",
+        show: data.value?.is_restaurant ?? false
+    }, {
+        to: "/shop/active-orders",
+        label: "Active Orders",
         show: data.value?.is_restaurant ?? false
     }, {
         to: "/orders",

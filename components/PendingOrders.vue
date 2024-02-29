@@ -9,11 +9,6 @@
                     <UButton v-if="getAllOrdersCount" icon="i-mdi-basket-check" color="gray"
                         @click="showCreateModal = true">Make Order</UButton>
                 </div>
-                <div v-if="getAllOrdersCount" class="items-center gap-1 hidden md:flex">
-                    <span>Cards</span>
-                    <UToggle v-model="cardOrList" />
-                    <span>List</span>
-                </div>
             </div>
         </div>
 
