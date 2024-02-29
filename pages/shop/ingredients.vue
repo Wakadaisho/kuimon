@@ -11,7 +11,7 @@
                             Actions
                         </UButton>
                     </UDropdown>
-                    <UButton icon="i-heroicons-plus-circle px-1" @click="showAddModal = true">Add Ingredient</UButton>
+                    <UButton icon="i-heroicons-plus-circle" @click="showAddModal = true">Add Ingredient</UButton>
                 </div>
             </div>
         </template>
@@ -40,18 +40,7 @@
 
             </template>
             <template #actions-data="{ row }">
-                <!-- Cannot edit system ingredients -->
-                <div v-if="!!row.user_id" class="flex gap-4">
-                    <UButton icon="i-heroicons-pencil" size="2xs" color="orange" variant="ghost" square
-                        @click="activeIngredientRef = row; showUpdateModal = true" />
-                    <UButton icon="i-heroicons-trash" size="2xs" color="red" variant="soft" square
-                        @click="activeIngredientRef = row; showDeleteModal = true" />
-                </div>
-                <div v-else>
-                    <UTooltip text="Cannot be edited or removed">
-                        <UBadge variant="subtle">Default</UBadge>
-                    </UTooltip>
-                </div>
+                <ActionsPopover :data="row" :actions="actionLinks" :disabled="!row.user_id" />
             </template>
         </UTable>
 
@@ -255,6 +244,19 @@ const actions = [
     }]
 ]
 
+const actionLinks = [
+    {
+        label: 'Edit',
+        icon: 'i-heroicons-pencil',
+        click: (data) => { activeIngredientRef.value = data; showUpdateModal.value = true }
+    },
+    {
+        label: 'Delete',
+        icon: 'i-heroicons-trash',
+        click: (data) => { activeIngredientRef.value = data; showDeleteModal.value = true },
+    },
+]
+
 function select(row) {
     const index = selectedRows.value.findIndex((item) => item.id === row.id)
     if (index === -1) {
@@ -316,7 +318,7 @@ const columns = [
     { key: 'name', label: 'Name', sortable: true },
     { key: 'description', label: 'Description' },
     { key: 'allergen', label: 'Allergen' },
-    { key: 'actions', label: 'Actions' }
+    { key: 'actions', label: '' }
 ]
 
 const schema = z.object({

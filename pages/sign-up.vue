@@ -23,11 +23,11 @@
         </div>
       </UForm>
 
-      <UDivider class="my-5" label="OR" />
+      <!-- <UDivider class="my-5" label="OR" />
 
       <div class="flex justify-evenly">
         <UButton color="black" label="Continue with Google" icon="i-simple-icons-google" size="lg" block />
-      </div>
+      </div> -->
 
       <template class="flex justify-evenly" #footer>
         <p class="text-center text-sm">

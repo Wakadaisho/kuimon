@@ -11,7 +11,7 @@
                             Actions
                         </UButton>
                     </UDropdown>
-                    <UButton icon="i-heroicons-plus-circle px-1" @click="showAddModal = true">Add Item</UButton>
+                    <UButton icon="i-heroicons-plus-circle" @click="showAddModal = true">Add Item</UButton>
                 </div>
             </div>
         </template>
@@ -61,17 +61,7 @@
             </template>
 
             <template #actions-data="{ row }">
-                <div v-if="!!row.user_id" class="flex gap-4">
-                    <UButton icon="i-heroicons-pencil" size="2xs" color="orange" variant="ghost" square
-                        @click="activeItemRef = row; showUpdateModal = true" />
-                    <UButton icon="i-heroicons-trash" size="2xs" color="red" variant="soft" square
-                        @click="activeItemRef = row; showDeleteModal = true" />
-                </div>
-                <div v-else>
-                    <UTooltip text="Cannot be edited or removed">
-                        <UBadge variant="subtle">Default</UBadge>
-                    </UTooltip>
-                </div>
+                <ActionsPopover :data="row" :actions="actionLinks" :disabled="!row.user_id" />
             </template>
         </UTable>
 
@@ -117,7 +107,7 @@
                     </UFormGroup>
                     <UCard>
                         <template #footer>
-                            <UCommandPalette class="min-h-min" :empty-state="{ icon: null, label: null }"
+                            <UCommandPalette class="min-h-min" :empty-state="{ icon: null, label: null }" selected-icon=""
                                 :ui="{ emptyState: { wrapper: '' } }" command-attribute="name" :debounce="500"
                                 :placeholder="`Add ingredients...`" v-model="selectedIngredients" multiple
                                 :autoselect="false" :groups="ingredients"
@@ -209,7 +199,7 @@
                     </UFormGroup>
                     <UCard>
                         <template #footer>
-                            <UCommandPalette class="min-h-min" :empty-state="{ icon: null, label: null }"
+                            <UCommandPalette class="min-h-min" :empty-state="{ icon: null, label: null }" selected-icon=""
                                 :ui="{ emptyState: { wrapper: '' } }" command-attribute="name" :debounce="500"
                                 :placeholder="`Add ingredients...`" v-model="selectedIngredients" multiple
                                 :autoselect="false" :groups="ingredients"
@@ -357,6 +347,7 @@ const steps = [
     'medium',
     'hot'
 ]
+
 const colors = [
     'lime',
     'amber',
@@ -451,6 +442,19 @@ const actions = [
         icon: 'i-heroicons-trash',
         click: () => showDeleteAllModal.value = true,
     }]
+]
+
+const actionLinks = [
+    {
+        label: 'Edit',
+        icon: 'i-heroicons-pencil',
+        click: (data) => { activeItemRef.value = data; showUpdateModal.value = true }
+    },
+    {
+        label: 'Delete',
+        icon: 'i-heroicons-trash',
+        click: (data) => { activeItemRef.value = data; showDeleteModal.value = true },
+    },
 ]
 
 function select(row) {

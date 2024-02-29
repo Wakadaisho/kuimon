@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1 class="uppercase tracking-wide font-bold text-2xl">All Orders ({{ orders.length }})</h1>
+        <h1 class="uppercase tracking-wide font-bold text-2xl">Active Orders ({{ orders.length }})</h1>
         <UTable :columns="columns" :rows="orders">
             <template #created_at-data="{ row }">
                 <ClientOnly>
@@ -17,11 +17,8 @@
                     </div>
                 </div>
             </template>
-             <template #status-data="{ row }">
-                <ActionsPopover :data="row" :actions="actionLinks" />
-            </template>I
             <template #actions-data="{ row }">
-                <ActionsPopover :data="row" :actions="actionLinks" :disabled="row.completed || row.cancelled" />
+                <ActionsPopover :data="row" :actions="actionLinks" />
             </template>I
         </UTable>
         <UModal v-model="showDetailsModal">
@@ -45,13 +42,11 @@ const supabase = useSupabaseClient()
 const activeOrderRef = ref({})
 const showDetailsModal = ref(false)
 
-const { data, refresh } = await useAsyncData('all_orders_GET', async () => {
+const { data, refresh } = await useAsyncData('incomplete_orders_GET', async () => {
     return await supabase.from('order')
         .select(`
         id,
         created_at,
-        completed,
-        cancelled,
         order_menu_items(
             quantity,
             price,
@@ -60,7 +55,7 @@ const { data, refresh } = await useAsyncData('all_orders_GET', async () => {
                 image
             )
         )
-    `).eq('user_id', user.value.id).then(data => data.data)
+    `).eq('user_id', user.value.id).eq('completed', false).eq('cancelled', false).then(data => data.data)
 },);
 
 const orders = ref(data)

@@ -2,7 +2,7 @@
     <div>
         <NavBar />
         <div class="container mx-auto px-5">
-            <h1 class="uppercase tracking-wide font-bold text-2xl">Menu Management</h1>
+            <h1 class="uppercase tracking-wide font-bold text-2xl">Shop Management</h1>
 
             <UHorizontalNavigation :links="links"
                 class="border-b border-gray-200 dark:border-gray-800 tracking-wider uppercase text-xs font-semibold my-5 hidden md:block" />
@@ -11,8 +11,6 @@
             <UVerticalNavigation :links="links"
                 class="border-b border-gray-200 dark:border-gray-800 tracking-wider uppercase text-xs font-semibold my-5 block md:hidden" />
             <slot />
-
-
         </div>
     </div>
 </template>
@@ -42,7 +40,7 @@ if (ingredientsCount >= 1000) {
 }
 
 const links = [{
-    label: 'Shop',
+    label: 'Shop Settings',
     icon: 'i-simple-icons-homeassistantcommunitystore',
     to: { name: 'Shop Settings' },
 },

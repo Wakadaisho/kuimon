@@ -1,7 +1,5 @@
 <template>
-    <div>
-        Hi, I'm orders
-    </div>
+    <PendingOrders />
 </template>
 
 <script setup>
